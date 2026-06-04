@@ -6,16 +6,27 @@
   vars:
     repo_url: "https://github.com/dahousse/ansible-lab.git"
     repo_dest: "/opt/ansible-lab"
-    playbook_to_run: "site.yml"  # Ou un playbook spécifique selon le type de machine
+    playbook_to_run: "site.yml"
 
   tasks:
-    - name: Mise à jour du cache APT
+    - name: Détecter le gestionnaire de paquets
+      set_fact:
+        pkg_manager: "{{ 'dnf' if ansible_os_family == 'RedHat' else 'apt' }}"
+
+    - name: Mise à jour du cache des paquets (Debian/Ubuntu)
       apt:
         update_cache: yes
       changed_when: false
+      when: pkg_manager == 'apt'
+
+    - name: Mise à jour du cache des paquets (Fedora/RHEL)
+      dnf:
+        update_cache: yes
+      changed_when: false
+      when: pkg_manager == 'dnf'
 
     - name: Installation des dépendances (git, ansible)
-      apt:
+      package:
         name:
           - git
           - ansible
