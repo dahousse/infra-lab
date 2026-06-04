@@ -1,0 +1,33 @@
+---
+# playbook_pull.yml
+- name: Configuration initiale d'une nouvelle machine
+  hosts: localhost
+  become: yes
+  vars:
+    repo_url: "https://github.com/dahousse/ansible-lab.git"
+    repo_dest: "/opt/ansible-lab"
+    playbook_to_run: "site.yml"  # Ou un playbook spécifique selon le type de machine
+
+  tasks:
+    - name: Mise à jour du cache APT
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Installation des dépendances (git, ansible)
+      apt:
+        name:
+          - git
+          - ansible
+        state: present
+
+    - name: Cloner le dépôt de configuration
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dest }}"
+        version: main
+
+    - name: Exécuter le playbook principal
+      command: "ansible-playbook -i {{ repo_dest }}/hosts {{ repo_dest }}/{{ playbook_to_run }}"
+      args:
+        chdir: "{{ repo_dest }}"
