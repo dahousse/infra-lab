@@ -1,0 +1,4 @@
+*.tar.gz
+prometheus-*/
+node_exporter-*/
+*.log

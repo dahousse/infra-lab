@@ -1,0 +1,44 @@
+---
+- name: Déploiement du serveur Glances
+  hosts: supervision
+  gather_facts: no
+
+  tasks:
+    - name: Mise à jour du cache APT
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Installer Glances (version APT avec support web)
+      apt:
+        name: glances
+        state: present
+      notify: restart_glances
+
+    - name: Créer le service systemd pour Glances
+      copy:
+        dest: /etc/systemd/system/glances.service
+        content: |
+          [Unit]
+          Description=Glances Server
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/bin/glances -w --username admin --password REDACTED_SECRET
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: restart_glances
+
+    - name: Activer et démarrer le service
+      systemd:
+        name: glances
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: restart_glances
+      systemd:
+        name: glances
+        state: restarted

@@ -1,0 +1,16 @@
+[homelab]
+traefik ansible_host=192.168.1.200
+adguard ansible_host=192.168.1.202
+
+[supervision]
+monitor ansible_host=192.168.1.35
+prometheus ansible_host=192.168.1.36
+grafana ansible_host=192.168.1.37
+   
+
+[tous_mes_serveurs:children]
+homelab
+supervision
+
+[tous_mes_serveurs:vars]
+ansible_user=root

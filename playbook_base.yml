@@ -1,0 +1,51 @@
+---
+- name: Configuration de base pour mes sentinelles
+  hosts: homelab
+  gather_facts: no
+
+  tasks:
+    - name: Mise à jour du cache des paquets
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Installation des outils favoris
+      apt:
+        name:
+          - glances
+          - htop
+          - curl
+          - git
+        state: present
+      register: apt_install
+
+    - name: Nettoyer le cache APT après installation
+      apt:
+        autoclean: yes
+      when: apt_install.changed
+
+    - name: Configurer la rotation des logs
+      copy:
+        dest: /etc/logrotate.d/ansible-managed
+        content: |
+          /var/log/*.log {
+              weekly
+              rotate 4
+              compress
+              missingok
+              notifempty
+          }
+
+    - name: Réduire le niveau de log de Traefik à INFO (sécurité disque)
+      lineinfile:
+        path: /etc/traefik/traefik.yaml
+        regexp: '^\s*level:\s*'
+        line: '  level: INFO'
+      notify: restart_traefik
+      when: inventory_hostname == 'traefik'
+
+  handlers:
+    - name: restart_traefik
+      systemd:
+        name: traefik
+        state: restarted

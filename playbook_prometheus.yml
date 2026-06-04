@@ -1,0 +1,134 @@
+---
+- name: Installation et configuration de Prometheus
+  hosts: prometheus
+  become: true
+  vars:
+    prometheus_version: "2.51.2"
+    prometheus_user: "prometheus"
+    prometheus_group: "prometheus"
+    prometheus_dir: "/etc/prometheus"
+    prometheus_data_dir: "/var/lib/prometheus"
+    prometheus_bin: "/usr/local/bin/prometheus"
+
+  tasks:
+    - name: Mettre à jour le cache APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Installer les dépendances
+      apt:
+        name:
+          - wget
+          - tar
+        state: present
+
+    - name: Créer le groupe Prometheus
+      group:
+        name: "{{ prometheus_group }}"
+        system: yes
+
+    - name: Créer l'utilisateur Prometheus
+      user:
+        name: "{{ prometheus_user }}"
+        group: "{{ prometheus_group }}"
+        system: yes
+        shell: /sbin/nologin
+        create_home: no
+
+    - name: Créer les répertoires
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_group }}"
+        mode: '0755'
+      loop:
+        - "{{ prometheus_dir }}"
+        - "{{ prometheus_data_dir }}"
+
+    - name: Télécharger Prometheus
+      get_url:
+        url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/prometheus.tar.gz"
+        mode: '0644'
+
+    - name: Extraire Prometheus
+      unarchive:
+        src: "/tmp/prometheus.tar.gz"
+        dest: "/tmp"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Déplacer les binaires
+      copy:
+        src: "/tmp/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+        remote_src: yes
+      loop:
+        - prometheus
+        - promtool
+      notify: restart prometheus
+
+    - name: Configurer prometheus.yml
+      copy:
+        dest: "{{ prometheus_dir }}/prometheus.yml"
+        content: |
+          global:
+            scrape_interval: 15s
+            evaluation_interval: 15s
+
+          scrape_configs:
+            - job_name: 'prometheus'
+              static_configs:
+                - targets: ['localhost:9090']
+
+            - job_name: 'node_exporter'
+              static_configs:
+                - targets:
+                    - '192.168.1.36:9100'
+                    - '192.168.1.37:9100'
+      notify: restart prometheus
+
+    - name: Créer le service systemd
+      copy:
+        dest: /etc/systemd/system/prometheus.service
+        content: |
+          [Unit]
+          Description=Prometheus Server
+          After=network-online.target
+
+          [Service]
+          User={{ prometheus_user }}
+          Group={{ prometheus_group }}
+          ExecStart={{ prometheus_bin }} \
+            --config.file={{ prometheus_dir }}/prometheus.yml \
+            --storage.tsdb.path={{ prometheus_data_dir }} \
+            --storage.tsdb.retention.time=15d \
+            --web.listen-address=0.0.0.0:9090
+
+          Restart=on-failure
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - reload systemd
+        - restart prometheus
+
+    - name: Activer et démarrer Prometheus
+      systemd:
+        name: prometheus
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart prometheus
+      systemd:
+        name: prometheus
+        state: restarted
