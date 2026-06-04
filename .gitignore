@@ -2,3 +2,4 @@
 prometheus-*/
 node_exporter-*/
 *.log
+prometheus-*.tar.gz
