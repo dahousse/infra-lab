@@ -6,11 +6,17 @@ adguard ansible_host=192.168.1.202
 monitor ansible_host=192.168.1.35
 prometheus ansible_host=192.168.1.36
 grafana ansible_host=192.168.1.37
-   
+
+[proxmox_host]
+pve ansible_host=192.168.1.1
 
 [tous_mes_serveurs:children]
 homelab
 supervision
 
 [tous_mes_serveurs:vars]
+ansible_user=root
+ansible_ssh_private_key_file = ~/.ssh/id_ed25519
+
+[proxmox_host:vars]
 ansible_user=root
