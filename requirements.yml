@@ -1,0 +1,10 @@
+---
+# requirements.yml
+# Liste des rôles Ansible externes nécessaires à ce projet.
+# Pour les installer : ansible-galaxy install -r requirements.yml
+
+roles:
+  # Exemple pour un rôle qui gérerait Docker
+  - name: geerlingguy.docker
+    version: 7.1.0
+    src: geerlingguy.docker

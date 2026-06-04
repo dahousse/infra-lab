@@ -1,0 +1,29 @@
+---
+name: CI - Validation des Playbooks Ansible
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-check:
+    name: Lint & Dry-Run
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Validation YAML
+        run: |
+          find . -name "*.yml" -or -name "*.yaml" | xargs -I {} ansible-playbook {} --syntax-check
+
+      - name: Vérification de l'inventaire
+        run: ansible-inventory -i hosts --list

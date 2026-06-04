@@ -1,0 +1,19 @@
+---
+# site.yml
+# Playbook principal d'orchestration de la forteresse.
+# Pour lancer la configuration complète : ansible-playbook -i hosts site.yml
+
+- name: Déploiement de la configuration de base
+  import_playbook: playbook_base.yml
+
+- name: Déploiement des agents de supervision
+  import_playbook: playbook_node_exporter.yml
+
+- name: Déploiement du serveur de métriques
+  import_playbook: playbook_prometheus.yml
+
+- name: Déploiement du serveur de visualisation
+  import_playbook: playbook_grafana.yml
+
+# On pourra ajouter Glances plus tard si on veut l'inclure dans l'orchestration globale
+# - import_playbook: playbook_glances.yml
