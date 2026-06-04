@@ -2,9 +2,6 @@
 - name: Installation et configuration de Grafana
   hosts: grafana
   become: true
-  vars:
-    grafana_port: "3000"
-    prometheus_url: "http://192.168.1.36:9090"
 
   tasks:
     - name: Mettre à jour le cache APT
