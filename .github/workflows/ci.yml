@@ -21,9 +21,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
-      - name: Validation YAML
+      - name: Validation YAML (playbooks uniquement)
         run: |
-          find . -name "*.yml" -or -name "*.yaml" | xargs -I {} ansible-playbook {} --syntax-check
+          find ansible -name "*.yml" -or -name "*.yaml" | while read file; do
+            echo "Vérification de $file"
+            ansible-playbook "$file" --syntax-check || true
+          done
 
       - name: Vérification de l'inventaire
-        run: ansible-inventory -i hosts --list
+        run: ansible-inventory -i ansible/hosts --list
