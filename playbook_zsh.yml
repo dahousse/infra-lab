@@ -7,12 +7,11 @@
     zshrc_template: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template"
 
   tasks:
-    - name: Installer les paquets essentiels
+    - name: Installer les paquets essentiels (sauf fastfetch)
       package:
         name:
           - zsh
           - htop
-          - fastfetch
           - git
           - curl
         state: present
@@ -22,22 +21,40 @@
         name: glances
         state: present
 
+    - name: Installer fastfetch depuis GitHub (binaire statique)
+      block:
+        - name: Récupérer l'URL du dernier binaire fastfetch
+          uri:
+            url: https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest
+            return_content: yes
+          register: fastfetch_api
+
+        - name: Extraire l'URL du binaire amd64
+          set_fact:
+            fastfetch_deb_url: "{{ fastfetch_api.json.assets | selectattr('name', 'search', 'linux-amd64') | map(attribute='browser_download_url') | first }}"
+
+        - name: Télécharger fastfetch
+          get_url:
+            url: "{{ fastfetch_deb_url }}"
+            dest: /usr/local/bin/fastfetch
+            mode: '0755'
+      when: ansible_os_family == "Debian"
+
     - name: Définir Zsh comme shell par défaut pour root
       user:
         name: root
         shell: /usr/bin/zsh
 
     - name: Vérifier si l'utilisateur hasmi existe
-      getent:
-        database: passwd
-        key: hasmi
-      register: hasmi_exists
+      shell: id hasmi
+      register: hasmi_check
+      ignore_errors: yes
 
     - name: Définir Zsh comme shell par défaut pour hasmi
       user:
         name: hasmi
         shell: /usr/bin/zsh
-      when: hasmi_exists is success
+      when: hasmi_check.rc == 0
 
     - name: Installer Oh My Zsh pour root
       git:
@@ -56,7 +73,7 @@
         repo: "{{ ohmyzsh_repo }}"
         dest: /home/hasmi/.oh-my-zsh
         depth: 1
-      when: hasmi_exists is success
+      when: hasmi_check.rc == 0
 
     - name: Copier le .zshrc pour hasmi
       copy:
@@ -66,4 +83,4 @@
         group: hasmi
         mode: '0644'
         remote_src: yes
-      when: hasmi_exists is success
+      when: hasmi_check.rc == 0
