@@ -1,0 +1,31 @@
+---
+- name: Déploiement d'Uptime Kuma
+  hosts: monitor
+  become: yes
+  vars:
+    uptime_port: "3001"
+    domain: "uptime.mysmihome.duckdns.org"
+
+  tasks:
+    - name: Installer les dépendances
+      apt:
+        name:
+          - docker.io
+          - python3-docker
+        state: present
+
+    - name: Créer le dossier de données
+      file:
+        path: /opt/uptime-kuma
+        state: directory
+
+    - name: Lancer le conteneur Uptime Kuma
+      docker_container:
+        name: uptime-kuma
+        image: louislam/uptime-kuma:1
+        restart_policy: always
+        ports:
+          - "{{ uptime_port }}:3001"
+        volumes:
+          - /opt/uptime-kuma:/app/data
+        state: started
