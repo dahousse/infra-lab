@@ -1,0 +1,14 @@
+http:
+  routers:
+    dashy:
+      rule: "Host(`dashy.mysmihome.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: dashy
+      tls:
+        certResolver: letsencrypt
+  services:
+    dashy:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.13:4000"

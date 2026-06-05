@@ -1,0 +1,52 @@
+providers:
+  file:
+    directory: /etc/traefik/conf.d/
+
+entryPoints:
+  web:
+    address: ':80'
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ':443'
+    http:
+      tls:
+        certResolver: letsencrypt
+  traefik:
+    address: ':8080'
+
+api:
+  dashboard: true
+
+log:
+  filePath: /var/log/traefik/traefik.log
+  format: json
+  level: INFO
+
+accessLog:
+  filePath: /var/log/traefik/traefik-access.log
+  format: json
+  filters:
+    statusCodes:
+      - "200"
+      - "400-599"
+    retryAttempts: true
+    minDuration: "10ms"
+  bufferingSize: 0
+  fields:
+    headers:
+      defaultMode: drop
+      names:
+        User-Agent: keep
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: dahousse@gmail.com
+      storage: /etc/traefik/ssl/acme.json
+      dnsChallenge:
+        provider: duckdns
+        delayBeforeCheck: 0

@@ -1,0 +1,14 @@
+http:
+  routers:
+    adguard:
+      rule: "Host(`adguard.mysmihome.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: adguard
+      tls:
+        certResolver: letsencrypt
+  services:
+    adguard:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.202:80"

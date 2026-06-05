@@ -1,0 +1,18 @@
+http:
+  routers:
+    homelab:
+      rule: "Host(`homelab.mysmihome.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: homelab
+      tls:
+        certResolver: letsencrypt
+  services:
+    homelab:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.1.1:8006"
+        serversTransport: ignore-proxmox
+  serversTransports:
+    ignore-proxmox:
+      insecureSkipVerify: true

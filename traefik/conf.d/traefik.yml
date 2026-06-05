@@ -1,0 +1,9 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(`traefik.mysmihome.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: api@internal
+      tls:
+        certResolver: letsencrypt

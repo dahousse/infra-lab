@@ -1,0 +1,18 @@
+http:
+  routers:
+    portainer:
+      rule: "Host(`portainer.mysmihome.duckdns.org`)"
+      entryPoints:
+        - websecure
+      service: portainer
+      tls:
+        certResolver: letsencrypt
+  services:
+    portainer:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.1.3:9443"
+        serversTransport: ignore-portainer
+  serversTransports:
+    ignore-portainer:
+      insecureSkipVerify: true

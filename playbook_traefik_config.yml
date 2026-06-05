@@ -1,0 +1,30 @@
+---
+- name: Déployer la configuration Traefik depuis le dépôt
+  hosts: traefik
+  become: yes
+  tasks:
+    - name: Copier la configuration statique
+      copy:
+        src: traefik/traefik.yaml
+        dest: /etc/traefik/traefik.yaml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart traefik
+
+    - name: Copier les fichiers de configuration dynamique
+      copy:
+        src: "{{ item }}"
+        dest: /etc/traefik/conf.d/
+        owner: root
+        group: root
+        mode: '0644'
+      with_fileglob:
+        - "traefik/conf.d/*.yml"
+      notify: restart traefik
+
+  handlers:
+    - name: restart traefik
+      systemd:
+        name: traefik
+        state: restarted
