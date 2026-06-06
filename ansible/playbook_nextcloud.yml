@@ -1,0 +1,127 @@
+---
+- name: Installation et configuration de Nextcloud
+  hosts: nextcloud_host
+  become: yes
+  vars:
+    nextcloud_version: "30.0.0"
+    nextcloud_url: "https://download.nextcloud.com/server/releases/nextcloud-{{ nextcloud_version }}.tar.bz2"
+    domain: "cloud.mysmihome.duckdns.org"
+    data_dir: "/var/www/nextcloud/data"
+    db_name: "nextcloud"
+    db_user: "nextcloud"
+    db_password: "REDACTED_SECRET"
+
+  tasks:
+    - name: Installer les dépendances
+      apt:
+        name:
+          - nginx
+          - mariadb-server
+          - php8.3
+          - php8.3-fpm
+          - php8.3-mysql
+          - php8.3-gd
+          - php8.3-curl
+          - php8.3-zip
+          - php8.3-xml
+          - php8.3-mbstring
+          - php8.3-intl
+          - unzip
+          - wget
+          - bzip2
+        state: present
+        update_cache: yes
+
+    - name: Installer le module Python MySQL
+      apt:
+        name: python3-pymysql
+        state: present
+
+    - name: Créer la base de données Nextcloud
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Créer l'utilisateur de la base de données
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "nextcloud.*:ALL"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Télécharger Nextcloud
+      get_url:
+        url: "{{ nextcloud_url }}"
+        dest: "/tmp/nextcloud.tar.bz2"
+
+    - name: Extraire Nextcloud
+      unarchive:
+        src: "/tmp/nextcloud.tar.bz2"
+        dest: /var/www/
+        remote_src: yes
+        creates: /var/www/nextcloud/index.php
+
+    - name: Créer le répertoire de données
+      file:
+        path: "{{ data_dir }}"
+        state: directory
+        owner: www-data
+        group: www-data
+
+    - name: Configurer les permissions
+      file:
+        path: /var/www/nextcloud
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    - name: Configurer Nginx
+      copy:
+        dest: /etc/nginx/sites-available/nextcloud
+        content: |
+          server {
+              listen 80;
+              server_name {{ domain }};
+
+              root /var/www/nextcloud;
+
+              index index.php index.html;
+
+              location / {
+                  try_files $uri $uri/ /index.php$request_uri;
+              }
+
+              location ~ \.php$ {
+                  include snippets/fastcgi-php.conf;
+                  fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+                  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                  include fastcgi_params;
+              }
+
+              location ~* \.(?:css|js|woff2?|svg|gif|png|jpg|ico)$ {
+                  expires 6M;
+                  access_log off;
+              }
+          }
+      notify: restart nginx
+
+    - name: Activer le site
+      file:
+        src: /etc/nginx/sites-available/nextcloud
+        dest: /etc/nginx/sites-enabled/nextcloud
+        state: link
+      notify: restart nginx
+
+    - name: Supprimer le site par défaut
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted

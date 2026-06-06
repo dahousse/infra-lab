@@ -10,6 +10,9 @@ grafana ansible_host=192.168.1.37
 [proxmox_host]
 pve ansible_host=192.168.1.1
 
+[nextcloud_host]
+nextcloud ansible_host=192.168.1.11
+
 [tous_mes_serveurs:children]
 homelab
 supervision
@@ -19,4 +22,7 @@ ansible_user=root
 ansible_ssh_private_key_file = /home/hasmi/.ssh/id_ed25519
 
 [proxmox_host:vars]
+ansible_user=root
+
+[nextcloud_host:vars]
 ansible_user=root
