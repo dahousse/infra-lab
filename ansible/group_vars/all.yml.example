@@ -1,0 +1,6 @@
+---
+# Copier ce fichier vers un fichier Vault chiffré, par exemple :
+# ansible-vault create ansible/group_vars/all.vault.yml
+
+glances_password: "change-me"
+nextcloud_db_password: "change-me"

@@ -1,2 +1,11 @@
 secret.vault.yml
 vault_pass.txt
+terraform.tfvars
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+*.auto.tfvars
+*.auto.tfvars.json

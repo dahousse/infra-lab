@@ -9,7 +9,6 @@
     data_dir: "/var/www/nextcloud/data"
     db_name: "nextcloud"
     db_user: "nextcloud"
-    db_password: "REDACTED_SECRET"
 
   tasks:
     - name: Installer les dépendances
@@ -46,10 +45,11 @@
     - name: Créer l'utilisateur de la base de données
       mysql_user:
         name: "{{ db_user }}"
-        password: "{{ db_password }}"
+        password: "{{ nextcloud_db_password }}"
         priv: "nextcloud.*:ALL"
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock
+      no_log: true
 
     - name: Télécharger Nextcloud
       get_url:

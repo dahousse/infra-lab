@@ -24,12 +24,13 @@
           After=network.target
 
           [Service]
-          ExecStart=/usr/bin/glances -w --username admin --password REDACTED_SECRET
+          ExecStart=/usr/bin/glances -w --username admin --password {{ glances_password }}
           Restart=always
 
           [Install]
           WantedBy=multi-user.target
       notify: restart_glances
+      no_log: true
 
     - name: Activer et démarrer le service
       systemd:

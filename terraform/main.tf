@@ -1,9 +1,7 @@
 terraform {
+  required_version = ">= 1.6.0"
+
   required_providers {
-    external = {
-      source  = "hashicorp/external"
-      version = "~> 2.0"
-    }
     null = {
       source  = "hashicorp/null"
       version = "~> 3.0"
@@ -11,35 +9,26 @@ terraform {
   }
 }
 
-# Déchiffrement du secret via Ansible Vault
-data "external" "vault" {
-  program = [
-    "bash", "-c",
-    "ansible-vault view secret.vault.yml --vault-password-file=vault_pass.txt 2>/dev/null | yq -o json"
-  ]
-}
-
-# Variable locale contenant le mot de passe déchiffré
-locals {
-  proxmox_password = data.external.vault.result.proxmox_password
-}
-
 # Création du conteneur
 resource "null_resource" "create_test_lxc" {
   provisioner "local-exec" {
     command = <<-EOT
-      sshpass -p '${local.proxmox_password}' ssh -o StrictHostKeyChecking=no root@192.168.1.1 \
-      "pvesh create /nodes/proxmox/lxc \
-      --ostemplate local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst \
-      --vmid 999 \
-      --storage local-lvm \
-      --hostname test-terraform \
-      --password REDACTED_SECRET \
-      --cores 1 \
-      --memory 512 \
-      --swap 512 \
+      set -euo pipefail
+      PROXMOX_PASSWORD=$(ansible-vault view "${var.vault_file}" --vault-password-file="${var.vault_password_file}" 2>/dev/null | yq -r '.proxmox_password')
+      LXC_ROOT_PASSWORD=$(ansible-vault view "${var.vault_file}" --vault-password-file="${var.vault_password_file}" 2>/dev/null | yq -r '.${var.vault_lxc_root_password_key}')
+
+      sshpass -p "$PROXMOX_PASSWORD" ssh -o StrictHostKeyChecking=no root@${var.proxmox_host} \
+      "pvesh create /nodes/${var.proxmox_node}/lxc \
+      --ostemplate ${var.lxc_template} \
+      --vmid ${var.test_lxc.vmid} \
+      --storage ${var.lxc_storage} \
+      --hostname ${var.test_lxc.hostname} \
+      --password '$LXC_ROOT_PASSWORD' \
+      --cores ${var.test_lxc.cores} \
+      --memory ${var.test_lxc.memory} \
+      --swap ${var.test_lxc.swap} \
       --unprivileged 1 \
-      --net0 name=eth0,bridge=vmbr0,ip=dhcp"
+      --net0 name=eth0,bridge=${var.lxc_bridge},ip=${var.test_lxc.ip_config}"
     EOT
   }
 }
@@ -47,18 +36,25 @@ resource "null_resource" "create_test_lxc" {
 # Destruction du conteneur
 resource "null_resource" "destroy_test_lxc" {
   triggers = {
-    proxmox_password = local.proxmox_password
+    proxmox_host        = var.proxmox_host
+    proxmox_node        = var.proxmox_node
+    vault_file          = var.vault_file
+    vault_password_file = var.vault_password_file
+    vmid                = tostring(var.test_lxc.vmid)
   }
 
   provisioner "local-exec" {
     when    = destroy
     command = <<-EOT
-      sshpass -p '${self.triggers["proxmox_password"]}' ssh -o StrictHostKeyChecking=no root@192.168.1.1 \
-      "pvesh delete /nodes/proxmox/lxc/999"
+      set -euo pipefail
+      PROXMOX_PASSWORD=$(ansible-vault view "${self.triggers["vault_file"]}" --vault-password-file="${self.triggers["vault_password_file"]}" 2>/dev/null | yq -r '.proxmox_password')
+
+      sshpass -p "$PROXMOX_PASSWORD" ssh -o StrictHostKeyChecking=no root@${self.triggers["proxmox_host"]} \
+      "pvesh delete /nodes/${self.triggers["proxmox_node"]}/lxc/${self.triggers["vmid"]}"
     EOT
   }
 }
 
 output "message" {
-  value = "Conteneur test-terraform géré par Terraform (création et destruction)."
+  value = "Conteneur ${var.test_lxc.hostname} géré par Terraform."
 }

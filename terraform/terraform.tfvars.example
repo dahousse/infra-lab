@@ -1,0 +1,11 @@
+proxmox_host      = "192.168.1.1"
+proxmox_node      = "proxmox"
+
+nextcloud_lxc = {
+  vmid      = 110
+  hostname  = "nextcloud"
+  cores     = 2
+  memory    = 1024
+  swap      = 512
+  ip_config = "192.168.1.11/24"
+}

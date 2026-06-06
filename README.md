@@ -56,20 +56,57 @@ Playbooks Ansible pour Prometheus, Node Exporter et Grafana
 ```bash
 ansible-playbook -i ansible/hosts ansible/site.yml
 cd terraform
+terraform plan
 terraform apply
-🔧 Maintenance
+```
+
+### Terraform
+
+Les conteneurs LXC sont provisionnés depuis `terraform/`.
+
+```bash
+cd terraform
+terraform init
+terraform fmt -recursive
+terraform validate
+terraform plan
+```
+
+Les secrets sont lus depuis Ansible Vault :
+
+- `proxmox_password` : mot de passe SSH/API Proxmox utilisé par les commandes `pvesh`
+- `lxc_root_password` : mot de passe root initial injecté dans les conteneurs LXC
+
+Les fichiers locaux sensibles ou générés ne doivent pas être commités : `secret.vault.yml`, `vault_pass.txt`, `terraform.tfvars`, `.terraform/` et `*.tfstate`.
+
+### Rotation après exposition Git
+
+Si un secret a été poussé sur GitHub, `.gitignore` ne suffit pas : il empêche seulement les prochains commits.
+
+Actions à faire dans cet ordre :
+
+1. Changer les mots de passe côté services réels : Proxmox, conteneurs LXC, Glances, MariaDB/Nextcloud.
+2. Mettre à jour les valeurs chiffrées dans Ansible Vault.
+3. Retirer les fichiers sensibles de l'historique Git avec `git-filter-repo`.
+4. Forcer le push de l'historique nettoyé vers GitHub.
+5. Vérifier sur GitHub que les anciens fichiers ne sont plus accessibles dans l'historique.
+
+## 🔧 Maintenance
+
 Sauvegarde du code : un script cron pousse le dépôt chaque soir à 22h.
 
-Sauvegarde des VMs : playbook playbook_backup.yml (à programmer).
+Sauvegarde des VMs : playbook `playbook_backup.yml` (à programmer).
 
 Supervision : Uptime Kuma surveille tous les services en continu.
 
-📝 Notes
-Les secrets sont chiffrés avec Ansible Vault (secret.vault.yml).
+## 📝 Notes
 
-Le fichier terraform.tfvars est exclu du dépôt (via .gitignore).
+Les secrets sont chiffrés avec Ansible Vault (`secret.vault.yml`).
+
+Le fichier `terraform.tfvars` est exclu du dépôt via `.gitignore`.
 
 L'inventaire Ansible est structuré par groupes (homelab, supervision, nextcloud_host, etc.).
 
-👤 Auteur
+## 👤 Auteur
+
 Dahousse - Passionné d'infrastructure et d'automatisation.
