@@ -109,4 +109,4 @@ L'inventaire Ansible est structuré par groupes (homelab, supervision, nextcloud
 
 ## 👤 Auteur
 
-Dahousse - Passionné d'infrastructure et d'automatisation.
+Hasmi - Passionné d'infrastructure et d'automatisation.
