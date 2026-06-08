@@ -4,3 +4,4 @@
 
 glances_password: "change-me"
 nextcloud_db_password: "change-me"
+nextcloud_admin_password: "change-me"

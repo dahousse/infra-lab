@@ -34,6 +34,12 @@ variable "lxc_template" {
   default     = "local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst"
 }
 
+variable "nextcloud_vm_template_vmid" {
+  description = "VM template Proxmox à cloner pour Nextcloud."
+  type        = number
+  default     = 102
+}
+
 variable "lxc_storage" {
   description = "Stockage Proxmox cible."
   type        = string
@@ -72,8 +78,8 @@ variable "test_lxc" {
   }
 }
 
-variable "nextcloud_lxc" {
-  description = "Paramètres du conteneur Nextcloud."
+variable "nextcloud_vm" {
+  description = "Paramètres de la VM Nextcloud."
   type = object({
     vmid      = number
     hostname  = string
@@ -83,11 +89,23 @@ variable "nextcloud_lxc" {
     ip_config = string
   })
   default = {
-    vmid      = 110
+    vmid      = 124
     hostname  = "nextcloud"
     cores     = 2
-    memory    = 1024
-    swap      = 512
+    memory    = 4096
+    swap      = 0
     ip_config = "192.168.1.11/24"
   }
+}
+
+variable "nextcloud_vm_disk_resize" {
+  description = "Taille du disque système Nextcloud après clonage."
+  type        = string
+  default     = "20G"
+}
+
+variable "ssh_public_key_file" {
+  description = "Clé publique SSH injectée dans la VM Nextcloud via cloud-init."
+  type        = string
+  default     = "/home/hasmi/.ssh/id_ed25519.pub"
 }

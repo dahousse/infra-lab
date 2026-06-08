@@ -9,6 +9,7 @@
     data_dir: "/var/www/nextcloud/data"
     db_name: "nextcloud"
     db_user: "nextcloud"
+    nextcloud_admin_user: "admin"
 
   tasks:
     - name: Installer les dépendances
@@ -16,18 +17,22 @@
         name:
           - nginx
           - mariadb-server
-          - php8.3
-          - php8.3-fpm
-          - php8.3-mysql
-          - php8.3-gd
-          - php8.3-curl
-          - php8.3-zip
-          - php8.3-xml
-          - php8.3-mbstring
-          - php8.3-intl
+          - php
+          - php-cli
+          - php-fpm
+          - php-mysql
+          - php-gd
+          - php-curl
+          - php-zip
+          - php-xml
+          - php-mbstring
+          - php-intl
+          - php-bcmath
+          - php-gmp
           - unzip
           - wget
           - bzip2
+          - rsync
         state: present
         update_cache: yes
 
@@ -55,6 +60,7 @@
       get_url:
         url: "{{ nextcloud_url }}"
         dest: "/tmp/nextcloud.tar.bz2"
+        mode: "0644"
 
     - name: Extraire Nextcloud
       unarchive:
@@ -69,6 +75,7 @@
         state: directory
         owner: www-data
         group: www-data
+        mode: "0750"
 
     - name: Configurer les permissions
       file:
@@ -77,6 +84,11 @@
         group: www-data
         recurse: yes
 
+    - name: Détecter la version PHP installée
+      command: php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;'
+      register: php_version
+      changed_when: false
+
     - name: Configurer Nginx
       copy:
         dest: /etc/nginx/sites-available/nextcloud
@@ -84,6 +96,7 @@
           server {
               listen 80;
               server_name {{ domain }};
+              client_max_body_size 1024M;
 
               root /var/www/nextcloud;
 
@@ -95,9 +108,10 @@
 
               location ~ \.php$ {
                   include snippets/fastcgi-php.conf;
-                  fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+                  fastcgi_pass unix:/run/php/php{{ php_version.stdout }}-fpm.sock;
                   fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
                   include fastcgi_params;
+                  fastcgi_read_timeout 360;
               }
 
               location ~* \.(?:css|js|woff2?|svg|gif|png|jpg|ico)$ {
@@ -119,6 +133,45 @@
         path: /etc/nginx/sites-enabled/default
         state: absent
       notify: restart nginx
+
+    - name: Installer Nextcloud si nécessaire
+      command: >
+        sudo -u www-data php occ maintenance:install
+        --database mysql
+        --database-name {{ db_name }}
+        --database-user {{ db_user }}
+        --database-pass {{ nextcloud_db_password }}
+        --admin-user {{ nextcloud_admin_user }}
+        --admin-pass {{ nextcloud_admin_password }}
+      args:
+        chdir: /var/www/nextcloud
+        creates: /var/www/nextcloud/config/config.php
+      no_log: true
+
+    - name: Configurer les domaines fiables
+      command: "sudo -u www-data php occ config:system:set trusted_domains {{ item.index }} --value={{ item.value }}"
+      args:
+        chdir: /var/www/nextcloud
+      loop:
+        - { index: 0, value: "{{ domain }}" }
+        - { index: 1, value: "{{ ansible_host }}" }
+
+    - name: Configurer le proxy inverse
+      command: "sudo -u www-data php occ config:system:set {{ item.key }} --value={{ item.value }}"
+      args:
+        chdir: /var/www/nextcloud
+      loop:
+        - { key: overwrite.cli.url, value: "https://{{ domain }}" }
+        - { key: overwriteprotocol, value: https }
+        - { key: overwritehost, value: "{{ domain }}" }
+        - { key: trusted_proxies.0, value: "192.168.1.200" }
+
+    - name: Configurer le cron Nextcloud
+      cron:
+        name: Nextcloud background jobs
+        user: www-data
+        job: "php -f /var/www/nextcloud/cron.php"
+        minute: "*/5"
 
   handlers:
     - name: restart nginx
