@@ -1,10 +1,38 @@
 from core.client import OllamaClient
 from core.config import load_config
+from utils import output
 
-def run(prompt):
+def run(args):
     cfg = load_config()
     client = OllamaClient(cfg["endpoint"])
 
-    model = cfg.get("default_model", "phi3:mini")
+    default_model = cfg.get("default_model", "phi3:mini")
+
+    model = default_model
+
+    if not args or args.strip() == "":
+        output.error("Empty prompt")
+        return None
+
+    tokens = args.split()
+
+    # --- model override ---
+    if "-m" in tokens:
+        i = tokens.index("-m")
+        if i + 1 < len(tokens):
+            model = tokens[i + 1]
+            tokens = tokens[:i] + tokens[i+2:]
+
+    elif "--model" in tokens:
+        i = tokens.index("--model")
+        if i + 1 < len(tokens):
+            model = tokens[i + 1]
+            tokens = tokens[:i] + tokens[i+2:]
+
+    prompt = " ".join(tokens).strip()
+
+    if not prompt:
+        output.error("Empty prompt")
+        return None
 
     return client.generate(model, prompt)
