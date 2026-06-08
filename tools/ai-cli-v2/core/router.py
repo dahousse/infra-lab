@@ -1,58 +1,79 @@
 from commands import run, models, system, doctor, help
 from utils import output
 
-def is_json(args):
-    return "--json" in args
+def parse_flags(argv):
+    flags = {
+        "json": False
+    }
 
-def clean(args):
-    return args.replace("--json", "").strip()
+    if "--json" in argv:
+        flags["json"] = True
+        argv = argv.replace("--json", "").strip()
+
+    return flags, argv
+
 
 def route(cmd, args):
 
-    json_mode = is_json(args)
-    args = clean(args)
+    # FIX IMPORTANT: allow "--json get models"
+    raw = f"{cmd} {args}".strip()
+    tokens = raw.split()
+
+    flags, cleaned = parse_flags(raw)
+    tokens = cleaned.split()
+
+    if not tokens:
+        output.error("Empty command")
+        return
+
+    cmd = tokens[0]
+    args = " ".join(tokens[1:])
+
+    if cmd == "get":
+        cmd = args.split()[0]
+        args = " ".join(args.split()[1:])
+
+    data = None
 
     if cmd == "run":
-        result = run.run(args)
+        data = run.run(args)
 
-        if json_mode:
-            output.json_output({
-                "cmd": "run",
-                "input": args,
-                "output": result
-            })
-        else:
-            if result:
-                print(result)
-        return
-
-    if cmd == "models":
+    elif cmd == "models":
         data = models.run()
 
-        if json_mode:
-            output.json_output(data)
-        else:
-            print("\n📦 Models\n")
-            for m in data.get("models", []):
-                print("-", m)
-        return
-
-    if cmd == "system":
+    elif cmd == "system":
         data = system.run()
 
-        if json_mode:
-            output.json_output(data)
-        return
-
-    if cmd == "doctor":
+    elif cmd == "doctor":
         data = doctor.run()
 
-        if json_mode:
-            output.json_output(data)
+    elif cmd == "help":
+        return help.run()
+
+    else:
+        output.error("Unknown command")
         return
 
-    if cmd == "help":
-        help.run()
-        return
+    if flags["json"]:
+        output.json_output(data)
+    else:
+        render_text(cmd, data)
 
-    output.error("Unknown command")
+
+def render_text(cmd, data):
+
+    if cmd == "run":
+        print(data)
+
+    elif cmd == "models":
+        print("\n📦 Models\n")
+        for m in data.get("models", []):
+            print("-", m)
+
+    elif cmd == "doctor":
+        print("\n🧠 Doctor\n")
+        print("Status:", data.get("status"))
+        print("Models:", data.get("models_count", 0))
+
+    elif cmd == "system":
+        print(data)
