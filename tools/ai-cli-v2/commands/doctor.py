@@ -1,5 +1,6 @@
 import requests
 from core.config import load_config
+from utils.output import ok, error
 
 def run():
     cfg = load_config()
@@ -10,14 +11,11 @@ def run():
     try:
         r = requests.get(f"{endpoint}/api/tags", timeout=5)
         r.raise_for_status()
-        print("✔ Ollama OK")
+        ok("Ollama reachable")
     except Exception as e:
-        print("❌ Ollama FAIL")
+        error("Ollama unreachable")
         print(e)
         return
 
     models = r.json().get("models", [])
-    print(f"Models: {len(models)}")
-
-    for m in models:
-        print(" -", m["name"])
+    ok(f"Models OK ({len(models)})")

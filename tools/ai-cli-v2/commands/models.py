@@ -1,13 +1,16 @@
-from core.client import OllamaClient
 from core.config import load_config
+import requests
 
 def run():
     cfg = load_config()
-    client = OllamaClient(cfg["endpoint"])
+    endpoint = cfg["endpoint"]
 
-    data = client.models()
+    r = requests.get(f"{endpoint}/api/tags", timeout=5)
+    r.raise_for_status()
 
-    print("\n📦 Models disponibles:\n")
+    models = r.json().get("models", [])
 
-    for m in data.get("models", []):
-        print(f"- {m['name']}")
+    print("\n📦 Models\n")
+
+    for m in models:
+        print("-", m["name"])

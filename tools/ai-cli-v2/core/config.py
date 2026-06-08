@@ -1,14 +1,17 @@
 from pathlib import Path
 import yaml
+from core.errors import ConfigError
 
-# 🔥 bon niveau = ai-cli-v2/
-BASE_DIR = Path(__file__).resolve().parents[1]
-
-CONFIG_PATH = BASE_DIR / "config" / "config.yaml"
+DEFAULT_PATHS = [
+    Path("./tools/ai-cli-v2/config/config.yaml"),
+    Path.home() / ".config/ai-cli/config.yaml",
+    Path("/etc/ai-cli/config.yaml"),
+]
 
 def load_config():
-    if not CONFIG_PATH.exists():
-        raise FileNotFoundError(f"Config not found: {CONFIG_PATH}")
+    for path in DEFAULT_PATHS:
+        if path.exists():
+            with open(path, "r") as f:
+                return yaml.safe_load(f)
 
-    with open(CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+    raise ConfigError(f"No config found in: {DEFAULT_PATHS}")

@@ -1,13 +1,15 @@
-from commands import run, models, system, doctor
+from commands import run, models, system, doctor,help
 
 def route(cmd, args):
     if cmd == "run":
         return run.run(args)
-    if cmd == "models":
+    elif cmd == "models":
         return models.run()
-    if cmd == "system":
+    elif cmd == "system":
         return system.run()
-    if cmd == "doctor":
+    elif cmd == "doctor":
         return doctor.run()
-
-    print("Unknown command:", cmd)
+    elif cmd == "help":
+        return help.run()
+    else:
+        print("❌ Unknown command. Try: run | models | system | doctor")
