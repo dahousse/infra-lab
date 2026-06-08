@@ -8,15 +8,13 @@ def run(args):
 
     default_model = cfg.get("default_model", "phi3:mini")
 
-    model = default_model
-
     if not args or args.strip() == "":
         output.error("Empty prompt")
         return None
 
+    model = default_model
     tokens = args.split()
 
-    # --- model override ---
     if "-m" in tokens:
         i = tokens.index("-m")
         if i + 1 < len(tokens):

@@ -10,7 +10,6 @@ def run():
 
     models = r.json().get("models", [])
 
-    print("\n📦 Models\n")
-
-    for m in models:
-        print("-", m["name"])
+    return {
+        "models": [m["name"] for m in models]
+    }
