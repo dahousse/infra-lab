@@ -1,0 +1,7 @@
+---
+- name: Deploy Ollama AI Node
+  hosts: ai
+  become: yes
+
+  roles:
+    - ollama

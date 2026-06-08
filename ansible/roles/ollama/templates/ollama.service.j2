@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollama AI Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User={{ ollama_user }}
+Group={{ ollama_group | default(ollama_user) }}
+Restart=always
+RestartSec=3
+
+Environment="OLLAMA_HOST=0.0.0.0:{{ ollama_port }}"
+Environment="OLLAMA_MODELS={{ ollama_models_path }}"
+
+[Install]
+WantedBy=multi-user.target

@@ -20,3 +20,12 @@ secret.vault.yml
 vault_pass.txt
 *.vault.yml
 *.vault.yaml
+# IDE
+.vscode/
+
+# Ansible
+*.retry
+
+# Python
+__pycache__/
+*.pyc

@@ -1,0 +1,8 @@
+ollama_user: ollama
+ollama_group: ollama
+
+ollama_port: 11434
+ollama_models_path: /var/lib/ollama
+
+ollama_service_name: ollama
+ollama_binary_path: /usr/local/bin/ollama

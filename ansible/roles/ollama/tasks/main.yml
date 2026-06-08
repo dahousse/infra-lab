@@ -1,0 +1,46 @@
+---
+- name: Installer dépendances système
+  apt:
+    name:
+      - curl
+      - ca-certificates
+    state: present
+    update_cache: yes
+
+- name: Créer user ollama
+  user:
+    name: "{{ ollama_user }}"
+    system: yes
+    create_home: no
+    shell: /usr/sbin/nologin
+
+- name: Vérifier installation ollama
+  stat:
+    path: "{{ ollama_binary_path }}"
+  register: ollama_bin
+
+- name: Installer Ollama si absent
+  shell: |
+    curl -fsSL https://ollama.com/install.sh | sh
+  when: not ollama_bin.stat.exists
+
+- name: Créer dossier models
+  file:
+    path: "{{ ollama_models_path }}"
+    state: directory
+    owner: "{{ ollama_user }}"
+    group: "{{ ollama_group | default(ollama_user) }}"
+    mode: "0755"
+
+- name: Déployer service systemd
+  template:
+    src: ollama.service.j2
+    dest: /etc/systemd/system/ollama.service
+  notify: restart ollama
+
+- name: Activer service ollama
+  systemd:
+    name: ollama
+    enabled: yes
+    state: started
+    daemon_reload: yes

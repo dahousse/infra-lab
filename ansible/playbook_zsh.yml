@@ -1,10 +1,9 @@
----
 - name: Configuration Zsh et outils CLI
   hosts: tous_mes_serveurs
-  become: yes
+  become: 'yes'
   vars:
-    ohmyzsh_repo: "https://github.com/ohmyzsh/ohmyzsh.git"
-    zshrc_template: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template"
+    ohmyzsh_repo: https://github.com/ohmyzsh/ohmyzsh.git
+    zshrc_template: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template
 
   tasks:
     - name: Installer les paquets essentiels (sauf fastfetch)
@@ -26,16 +25,18 @@
         - name: Récupérer l'URL du dernier binaire fastfetch
           uri:
             url: https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest
-            return_content: yes
+            return_content: 'yes'
           register: fastfetch_api
 
         - name: Extraire l'URL du binaire amd64
           set_fact:
-            fastfetch_deb_url: "{{ fastfetch_api.json.assets | selectattr('name', 'search', 'linux-amd64') | map(attribute='browser_download_url') | first }}"
+            fastfetch_deb_url: '{{ fastfetch_api.json.assets | selectattr(''name'',
+              ''search'', ''linux-amd64'') |
+              map(attribute=''browser_download_url'') | first }}'
 
         - name: Télécharger fastfetch
           get_url:
-            url: "{{ fastfetch_deb_url }}"
+            url: '{{ fastfetch_deb_url }}'
             dest: /usr/local/bin/fastfetch
             mode: '0755'
       when: ansible_os_family == "Debian"
@@ -48,7 +49,7 @@
     - name: Vérifier si l'utilisateur hasmi existe
       shell: id hasmi
       register: hasmi_check
-      ignore_errors: yes
+      ignore_errors: 'yes'
 
     - name: Définir Zsh comme shell par défaut pour hasmi
       user:
@@ -58,19 +59,19 @@
 
     - name: Installer Oh My Zsh pour root
       git:
-        repo: "{{ ohmyzsh_repo }}"
+        repo: '{{ ohmyzsh_repo }}'
         dest: /root/.oh-my-zsh
         depth: 1
 
     - name: Télécharger le template .zshrc pour root
       get_url:
-        url: "{{ zshrc_template }}"
+        url: '{{ zshrc_template }}'
         dest: /root/.zshrc
         mode: '0644'
 
     - name: Installer Oh My Zsh pour hasmi (si présent)
       git:
-        repo: "{{ ohmyzsh_repo }}"
+        repo: '{{ ohmyzsh_repo }}'
         dest: /home/hasmi/.oh-my-zsh
         depth: 1
       when: hasmi_check.rc == 0
@@ -82,5 +83,5 @@
         owner: hasmi
         group: hasmi
         mode: '0644'
-        remote_src: yes
+        remote_src: 'yes'
       when: hasmi_check.rc == 0
