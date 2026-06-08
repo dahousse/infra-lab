@@ -1,10 +1,10 @@
 from core.client import OllamaClient
 from core.config import load_config
 
-def run(prompt, model=None):
+def run(prompt):
     cfg = load_config()
-
     client = OllamaClient(cfg["endpoint"])
-    model = model or cfg["default_model"]
+
+    model = cfg.get("default_model", "phi3:mini")
 
     return client.generate(model, prompt)
