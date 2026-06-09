@@ -1,28 +1,9 @@
-from core.client import OllamaClient
-from core.config import load_config
+from core.router import route
 
-def run(args):
 
-    cfg = load_config()
-    client = OllamaClient(cfg["endpoint"])
+def main(args):
+    prompt = " ".join(args)
 
-    model = cfg.get("default_model", "phi3:mini")
-
-    if not args.strip():
-        return "Empty prompt"
-
-    tokens = args.split()
-
-    if "-m" in tokens:
-        i = tokens.index("-m")
-        model = tokens[i + 1]
-        tokens = tokens[:i] + tokens[i+2:]
-
-    elif "--model" in tokens:
-        i = tokens.index("--model")
-        model = tokens[i + 1]
-        tokens = tokens[:i] + tokens[i+2:]
-
-    prompt = " ".join(tokens)
-
-    return client.generate(model, prompt)
+    print("[DEBUG] ROUTE ACTIVE")
+    result = route(prompt)
+    print(result)
