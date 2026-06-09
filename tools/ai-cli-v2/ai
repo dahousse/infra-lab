@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
-import sys
-from core.router import route
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: ai <command>")
-        return
-
-    cmd = sys.argv[1]
-    args = " ".join(sys.argv[2:])
-
-    route(cmd, args)
+from cli.main import main
 
 if __name__ == "__main__":
     main()
