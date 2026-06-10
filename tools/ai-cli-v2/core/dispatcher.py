@@ -1,13 +1,20 @@
 from engines.vm import create_vm
 from engines.ollama import ask
+from utils.output_layer import wrap
+
 
 def dispatch(plan: dict):
     engine = plan.get("engine", "ollama")
 
     if engine == "vm":
-        return create_vm(plan)
+        result = create_vm(plan)
+        return wrap("vm", result)
 
     if engine == "docker":
-        return "[DOCKER] not implemented yet"
+        return wrap("docker", {"message": "not implemented yet"})
 
-    return ask(str(plan))
+    try:
+        result = ask(str(plan))
+        return wrap("ollama", result)
+    except Exception as e:
+        return wrap("ollama", error=str(e))

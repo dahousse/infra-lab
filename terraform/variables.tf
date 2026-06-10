@@ -109,3 +109,16 @@ variable "ssh_public_key_file" {
   type        = string
   default     = "/home/hasmi/.ssh/id_ed25519.pub"
 }
+
+variable "proxmox_password" {
+  description = "Mot de passe de l'hôte Proxmox."
+  type        = string
+  sensitive   = true
+}
+
+variable "lxc_root_password" {
+  description = "Mot de passe root initial pour le conteneur LXC."
+  type        = string
+  sensitive   = true
+}
+
