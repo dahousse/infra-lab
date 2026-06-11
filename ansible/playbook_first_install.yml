@@ -1,0 +1,136 @@
+---
+- name: Configuration Zsh, outils CLI, compte infra et clé SSH
+  hosts: tous_mes_serveurs
+  vars:
+    ohmyzsh_repo: https://github.com/ohmyzsh/ohmyzsh.git
+    zshrc_template: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template
+
+  tasks:
+    # Récupérer le nom de l'utilisateur de connexion avant le become
+    - name: Récupérer le nom de l'utilisateur de connexion
+      set_fact:
+        connection_user: "{{ ansible_user_id }}"
+      become: no
+
+    # Création du compte infra avec droits sudo
+    - name: Créer le groupe infra
+      group:
+        name: infra
+        state: present
+      become: yes
+
+    - name: Créer l'utilisateur infra
+      user:
+        name: infra
+        groups: sudo
+        shell: /usr/bin/zsh
+        create_home: yes
+        state: present
+      become: yes
+
+    - name: Autoriser infra à utiliser sudo sans mot de passe
+      copy:
+        dest: /etc/sudoers.d/infra
+        content: "infra ALL=(ALL) NOPASSWD: ALL"
+        mode: '0440'
+      become: yes
+
+    # Déployer la clé SSH pour l'utilisateur infra
+    - name: Créer le dossier .ssh pour infra
+      file:
+        path: /home/infra/.ssh
+        state: directory
+        owner: infra
+        group: infra
+        mode: '0700'
+      become: yes
+
+    - name: Déployer la clé publique SSH pour infra
+      authorized_key:
+        user: infra
+        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+        state: present
+      become: yes
+
+    # Déployer la clé SSH pour root
+    - name: Déployer la clé publique SSH pour root
+      authorized_key:
+        user: root
+        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+        state: present
+      become: yes
+
+    # Installation des paquets essentiels
+    - name: Installer les paquets essentiels
+      apt:
+        name:
+          - zsh
+          - htop
+          - git
+          - curl
+          - screenfetch
+        state: present
+      become: yes
+
+    - name: Installer glances (version CLI)
+      apt:
+        name: glances
+        state: present
+      become: yes
+
+    # Configuration de Zsh pour root
+    - name: Définir Zsh comme shell par défaut pour root
+      user:
+        name: root
+        shell: /usr/bin/zsh
+      become: yes
+
+    - name: Installer Oh My Zsh pour root (sans interaction)
+      shell: |
+        if [ ! -d /root/.oh-my-zsh ]; then
+          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        fi
+      become: yes
+
+    - name: Télécharger le template .zshrc pour root
+      get_url:
+        url: '{{ zshrc_template }}'
+        dest: /root/.zshrc
+        mode: '0644'
+      become: yes
+
+    # Configuration de Zsh pour l'utilisateur de connexion (hasmi, infra, etc.)
+    - name: Vérifier si l'utilisateur de connexion existe
+      shell: id {{ connection_user }}
+      register: user_check
+      ignore_errors: 'yes'
+      become: yes
+
+    - name: Définir Zsh comme shell par défaut pour l'utilisateur de connexion
+      user:
+        name: '{{ connection_user }}'
+        shell: /usr/bin/zsh
+      when: user_check.rc == 0
+      become: yes
+
+    - name: Copier Oh My Zsh pour l'utilisateur de connexion (sans interaction)
+      copy:
+        src: /root/.oh-my-zsh
+        dest: '/home/{{ connection_user }}/'
+        owner: '{{ connection_user }}'
+        group: '{{ connection_user }}'
+        mode: '0755'
+        remote_src: 'yes'
+      when: user_check.rc == 0
+      become: yes
+
+    - name: Copier le .zshrc pour l'utilisateur de connexion
+      copy:
+        src: /root/.zshrc
+        dest: '/home/{{ connection_user }}/.zshrc'
+        owner: '{{ connection_user }}'
+        group: '{{ connection_user }}'
+        mode: '0644'
+        remote_src: 'yes'
+      when: user_check.rc == 0
+      become: yes

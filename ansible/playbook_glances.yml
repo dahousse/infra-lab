@@ -24,7 +24,7 @@
           After=network.target
 
           [Service]
-          ExecStart=/usr/bin/glances -w --username admin --password {{ glances_password }}
+          ExecStart=/usr/bin/glances -w --username admin --password hassan
           Restart=always
 
           [Install]

@@ -15,5 +15,5 @@
 - name: Déploiement du serveur de visualisation
   import_playbook: playbook_grafana.yml
 
-# On pourra ajouter Glances plus tard si on veut l'inclure dans l'orchestration globale
-# - import_playbook: playbook_glances.yml
+- name:First Install
+  import_playbook: playbook_first_install.yml

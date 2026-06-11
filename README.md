@@ -4,8 +4,26 @@
 
 Ce dépôt contient l'ensemble des playbooks Ansible et des fichiers Terraform pour provisionner, configurer et maintenir mon infrastructure sur Proxmox.
 
+---
+
 ## 🗺️ Architecture du dépôt
-Playbooks Ansible pour Prometheus, Node Exporter et Grafana
+infra-lab/
+├── ansible/ # Playbooks et configurations Ansible
+│ ├── playbooks/ # Playbooks individuels
+│ ├── group_vars/ # Variables par groupe d'inventaire
+│ ├── hosts # Inventaire des machines
+│ ├── site.yml # Playbook principal d'orchestration
+│ └── traefik/ # Configuration Traefik
+├── terraform/ # Fichiers Terraform pour provisionner Proxmox
+│ ├── main.tf # Ressources principales (test)
+│ ├── nextcloud.tf # Provisionnement du conteneur Nextcloud
+│ └── secret.vault.yml # Secrets chiffrés avec Ansible Vault
+├── .github/workflows/ # CI/CD avec GitHub Actions
+└── README.md # Ce fichier
+
+text
+
+---
 
 ## 🚀 Services Déployés
 
@@ -22,91 +40,154 @@ Playbooks Ansible pour Prometheus, Node Exporter et Grafana
 | Prometheus | `http://192.168.1.36:9090` | ✅ OK |
 | Grafana | `https://grafana.mysmihome.duckdns.org` | ✅ OK |
 
+---
+
 ## 🛠️ Technologies utilisées
 
-- **Hyperviseur** : Proxmox VE
-- **Reverse Proxy** : Traefik avec Let's Encrypt (DNS Challenge DuckDNS)
-- **Conteneurisation** : Docker, LXC
-- **Configuration Management** : Ansible
-- **Provisionnement** : Terraform
-- **Supervision** : Prometheus, Grafana, Uptime Kuma, Glances
-- **Sécurité** : Ansible Vault, WireGuard
-- **CI/CD** : GitHub Actions
+| Domaine | Outils |
+|---------|--------|
+| 🏗️ Hyperviseur | Proxmox VE |
+| 🌐 Reverse Proxy | Traefik avec Let's Encrypt (DNS Challenge DuckDNS) |
+| 📦 Conteneurisation | Docker, LXC |
+| ⚙️ Configuration Management | Ansible |
+| 🧱 Provisionnement | Terraform |
+| 📊 Supervision | Prometheus, Grafana, Uptime Kuma, Glances |
+| 🔒 Sécurité | Ansible Vault, WireGuard |
+| 🚦 CI/CD | GitHub Actions |
+
+---
 
 ## 📋 Playbooks Ansible
 
 | Playbook | Description |
 |----------|-------------|
-| `playbook_base.yml` | Configuration de base (outils, logs, sécurité) |
-| `playbook_node_exporter.yml` | Déploiement de Node Exporter |
-| `playbook_prometheus.yml` | Installation de Prometheus |
-| `playbook_grafana.yml` | Installation de Grafana |
-| `playbook_nextcloud.yml` | Installation de Nextcloud |
-| `playbook_uptimekuma.yml` | Déploiement d'Uptime Kuma |
-| `playbook_glances.yml` | Déploiement de Glances |
-| `playbook_backup.yml` | Sauvegarde Proxmox via API |
-| `playbook_zsh.yml` | Configuration Zsh, Oh My Zsh, fastfetch |
-| `playbook_traefik_config.yml` | Déploiement de la configuration Traefik |
-| `playbook_pull.yml` | Amorce pour `ansible-pull` |
+| `playbook_base.yml` | 🧰 Configuration de base (outils, logs, sécurité) |
+| `playbook_node_exporter.yml` | 📡 Déploiement de Node Exporter |
+| `playbook_prometheus.yml` | 📈 Installation de Prometheus |
+| `playbook_grafana.yml` | 📉 Installation de Grafana |
+| `playbook_nextcloud.yml` | ☁️ Installation de Nextcloud |
+| `playbook_uptimekuma.yml` | 🛎️ Déploiement d'Uptime Kuma |
+| `playbook_glances.yml` | 🔍 Déploiement de Glances |
+| `playbook_backup.yml` | 💾 Sauvegarde Proxmox via API |
+| `playbook_zsh.yml` | 🐚 Configuration Zsh, Oh My Zsh, screenfetch |
+| `playbook_traefik_config.yml` | 🚦 Déploiement de la configuration Traefik |
+| `playbook_pull.yml` | 🧲 Amorce pour `ansible-pull` |
+
+---
 
 ## 🚀 Utilisation
 
-### Déploiement complet
+### 🎯 Déploiement complet
 
 ```bash
 ansible-playbook -i ansible/hosts ansible/site.yml
-cd terraform
-terraform plan
-terraform apply
-```
-
-### Terraform
-
-Les conteneurs LXC sont provisionnés depuis `terraform/`.
-
-```bash
+🧱 Terraform
+bash
 cd terraform
 terraform init
 terraform fmt -recursive
 terraform validate
 terraform plan
-```
-
+terraform apply
+🔑 Secrets
 Les secrets sont lus depuis Ansible Vault :
 
-- `proxmox_password` : mot de passe SSH/API Proxmox utilisé par les commandes `pvesh`
-- `lxc_root_password` : mot de passe root initial injecté dans les conteneurs LXC
+secret.vault.yml
 
-Les fichiers locaux sensibles ou générés ne doivent pas être commités : `secret.vault.yml`, `vault_pass.txt`, `terraform.tfvars`, `.terraform/` et `*.tfstate`.
+vault_pass.txt
 
-### Rotation après exposition Git
+Les fichiers locaux sensibles ou générés ne doivent pas être commités :
 
-Si un secret a été poussé sur GitHub, `.gitignore` ne suffit pas : il empêche seulement les prochains commits.
+secret.vault.yml
 
-Actions à faire dans cet ordre :
+vault_pass.txt
 
-1. Changer les mots de passe côté services réels : Proxmox, conteneurs LXC, Glances, MariaDB/Nextcloud.
-2. Mettre à jour les valeurs chiffrées dans Ansible Vault.
-3. Retirer les fichiers sensibles de l'historique Git avec `git-filter-repo`.
-4. Forcer le push de l'historique nettoyé vers GitHub.
-5. Vérifier sur GitHub que les anciens fichiers ne sont plus accessibles dans l'historique.
+terraform.tfvars
 
-## 🔧 Maintenance
+.terraform/
 
+*.tfstate
+
+🧭 Guide de Poche Ansible
+🚀 Commandes de Base
+Lancer un playbook sur toutes les machines
+
+bash
+ansible-playbook -i hosts site.yml
+Lancer un playbook spécifique
+
+bash
+ansible-playbook -i hosts playbook_base.yml
+ansible-playbook -i hosts playbook_zsh.yml
+ansible-playbook -i hosts playbook_node_exporter.yml
+Vérifier la syntaxe d’un playbook sans l’exécuter
+
+bash
+ansible-playbook -i hosts playbook_base.yml --syntax-check
+Simuler l’exécution d’un playbook (dry-run)
+
+bash
+ansible-playbook -i hosts playbook_base.yml --check
+🎯 Cibler une Seule Machine
+Lancer un playbook sur une machine spécifique
+
+bash
+ansible-playbook -i hosts playbook_zsh.yml --limit cockpit
+ansible-playbook -i hosts playbook_base.yml --limit traefik
+Exécuter une commande ad-hoc sur une machine
+
+bash
+ansible cockpit -i hosts -m ping
+ansible traefik -i hosts -m shell -a "uptime"
+ansible adguard -i hosts -m apt -a "name=htop state=present"
+🛠️ Commandes Utiles
+Rafraîchir le cache APT d’une machine
+
+bash
+ansible traefik -i hosts -m apt -a "update_cache=yes"
+Redémarrer un service sur une machine
+
+bash
+ansible traefik -i hosts -m systemd -a "name=nginx state=restarted"
+Vérifier l’espace disque de toutes les machines
+
+bash
+ansible tous_mes_serveurs -i hosts -m shell -a "df -h /"
+Lister toutes les machines de l’inventaire
+
+bash
+ansible-inventory -i hosts --list
+🔐 Gestion des Clés SSH
+Copier sa clé publique sur une nouvelle machine
+
+bash
+ssh-copy-id root@192.168.1.X
+Tester la connexion SSH sans mot de passe
+
+bash
+ssh root@192.168.1.X hostname
+📋 Notes Personnelles
+Inventaire : situé dans ansible/hosts.
+
+Playbooks : tous les fichiers .yml dans ansible/.
+
+Site : site.yml orchestre le déploiement complet.
+
+Limiter les cibles : utiliser --limit <nom_machine> pour éviter d’affecter toute la flotte.
+
+🔧 Maintenance
 Sauvegarde du code : un script cron pousse le dépôt chaque soir à 22h.
 
-Sauvegarde des VMs : playbook `playbook_backup.yml` (à programmer).
+Sauvegarde des VMs : playbook playbook_backup.yml (à programmer).
 
 Supervision : Uptime Kuma surveille tous les services en continu.
 
-## 📝 Notes
+📝 Notes
+Les secrets sont chiffrés avec Ansible Vault (secret.vault.yml).
 
-Les secrets sont chiffrés avec Ansible Vault (`secret.vault.yml`).
-
-Le fichier `terraform.tfvars` est exclu du dépôt via `.gitignore`.
+Le fichier terraform.tfvars est exclu du dépôt via .gitignore.
 
 L'inventaire Ansible est structuré par groupes (homelab, supervision, nextcloud_host, etc.).
 
-## 👤 Auteur
-
+👤 Auteur
 Hasmi - Passionné d'infrastructure et d'automatisation.
