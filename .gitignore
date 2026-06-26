@@ -29,3 +29,7 @@ vault_pass.txt
 # Python
 __pycache__/
 *.pyc
+
+# Migrated to dedicated repos
+ansible/
+terraform/
