@@ -29,3 +29,4 @@ vault_pass.txt
 # Python
 __pycache__/
 *.pyc
+.vault_pass
