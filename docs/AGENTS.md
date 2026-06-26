@@ -69,7 +69,7 @@ terraform apply
 ```
 User → Router → Intent → Planner → Dispatcher → Engine
 ```
-Engines : ✅ VM, ✅ Ollama, ⚠️ Terraform (stubs)
+Engines : ✅ VM, ✅ Ollama, ✅ Proxmox, ✅ Terraform
 
 ## Versions
 - Terraform v1.15.6, provider bpg/proxmox v0.60.0

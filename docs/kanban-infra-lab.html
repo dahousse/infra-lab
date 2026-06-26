@@ -32,9 +32,9 @@ h1 small{font-size:.85rem;color:#6b7280;font-weight:400}
 <div class="header">
 <h1>📋 Infra Lab <small>Proxmox · Terraform · Ansible · Traefik</small></h1>
 <div class="counter">
-<span class="done"><strong>4</strong> ✅ faits</span>
-<span class="urgent"><strong>1</strong> 🔴 urgent</span>
-<span class="important"><strong>5</strong> 🟡 important</span>
+<span class="done"><strong>6</strong> ✅ faits</span>
+<span class="urgent"><strong>0</strong> 🔴 urgent</span>
+<span class="important"><strong>4</strong> 🟡 important</span>
 <span class="evo"><strong>4</strong> 🔵 évolution</span>
 </div>
 </div>
@@ -43,18 +43,14 @@ h1 small{font-size:.85rem;color:#6b7280;font-weight:400}
 
 <!-- URGENT -->
 <div class="column col-urgent">
-<h2>🔴 Urgent <span class="count">1</span></h2>
+<h2>🔴 Urgent <span class="count">0</span></h2>
 
-<div class="card card-urgent">
-<h3>U2 — Fix dotfiles role</h3>
-<p>Remplacer <code>&lt;ton-user&gt;</code> → <code>dahousse</code> dans dotfiles/tasks/main.yml</p>
-<div class="tags"><span class="tag">dotfiles</span><span class="tag tag-fixed">✅ FIXED</span></div>
-</div>
+<p style="color:#6b7280;font-size:.85rem;text-align:center;padding:20px 0">— Rien d'urgent —</p>
 </div>
 
 <!-- IMPORTANT -->
 <div class="column col-important">
-<h2>🟡 Important <span class="count">5</span></h2>
+<h2>🟡 Important <span class="count">4</span></h2>
 
 <div class="card card-important">
 <h3>I1 — Cycle auto TF → Ansible → Traefik</h3>
@@ -63,21 +59,15 @@ h1 small{font-size:.85rem;color:#6b7280;font-weight:400}
 </div>
 
 <div class="card card-important">
-<h3>I2 — Engine Terraform pour OS Prompt</h3>
-<p>Remplacer le stub de l'engine TF dans tools/ai-cli-v2/</p>
-<div class="tags"><span class="tag">ai-cli</span><span class="tag">engine</span></div>
-</div>
-
-<div class="card card-important">
-<h3>I3 — Engine Proxmox pour OS Prompt</h3>
-<p>Remplacer le stub de l'engine Proxmox → interactions VM via CLI</p>
-<div class="tags"><span class="tag">ai-cli</span><span class="tag">engine</span></div>
-</div>
-
-<div class="card card-important">
 <h3>I4 — Ansible sur les hosts EXISTANTS</h3>
 <p>Tester Ansible sur tous les hosts réels (traefik, cockpit, portainer...)</p>
 <div class="tags"><span class="tag">site.yml</span><span class="tag">test</span></div>
+</div>
+
+<div class="card card-important">
+<h3>I5 — OS Prompt ai-cli-v2 (CLI global)</h3>
+<p>Symlink global, PATH <code>.zshenv</code>, config Ollama, fix pyproject.toml — CLI accessible partout</p>
+<div class="tags"><span class="tag tag-done">🔧 EN COURS</span><span class="tag">ai-cli</span><span class="tag">deploy</span></div>
 </div>
 
 <div class="card card-important">
@@ -118,7 +108,19 @@ h1 small{font-size:.85rem;color:#6b7280;font-weight:400}
 
 <!-- TERMINÉ -->
 <div class="column col-done">
-<h2>✅ Terminé <span class="count">4</span></h2>
+<h2>✅ Terminé <span class="count">6</span></h2>
+
+<div class="card card-done">
+<h3>I2 — Engine Terraform pour OS Prompt</h3>
+<p>182 lignes : plan(), apply(), destroy(), handle() — full implementation, pas un stub ✅</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">ai-cli</span><span class="tag">engine</span></div>
+</div>
+
+<div class="card card-done">
+<h3>I3 — Engine Proxmox pour OS Prompt</h3>
+<p>314 lignes : list_vms, clone, config, start/stop/delete, IP detection, Ansible chain ✅</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">ai-cli</span><span class="tag">engine</span></div>
+</div>
 
 <div class="card card-done">
 <h3>U3 — Fix TF naming + inventory propre</h3>
