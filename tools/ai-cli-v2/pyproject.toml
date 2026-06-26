@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-cli-v2"
+version = "2.0.0"
+description = "AI CLI for Infra Lab - Ollama, Proxmox, Terraform"
+requires-python = ">=3.11"
+dependencies = [
+    "requests",
+    "psutil",
+]
+
+[project.scripts]
+ai-cli-v2 = "cli.main:main"
