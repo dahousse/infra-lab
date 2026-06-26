@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""ai-cli-v2 — OS Prompt CLI for infra management"""
+import sys
+import os
+
+# Add project root to path automatically
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, project_root)
 
 from cli_ai.main import main
 

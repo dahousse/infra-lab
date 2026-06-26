@@ -24,6 +24,20 @@ def build_plan(intent: dict) -> dict:
             "params": intent
         }
 
+    if intent_type == "infra.vm.start":
+        return {
+            "engine": "vm",
+            "action": "start_vm",
+            "params": intent
+        }
+
+    if intent_type == "infra.vm.plan":
+        return {
+            "engine": "terraform",
+            "action": "plan",
+            "params": intent
+        }
+
     if intent_type == "infra.container":
         return {
             "engine": "docker",
