@@ -84,7 +84,7 @@ def main():
 
     # Direct commands (bypass AI router)
     direct_cmd = args[0].lower()
-    if direct_cmd == "help":
+    if direct_cmd in ("help", "--help", "-h"):
         cmd_help.run()
         return
     if direct_cmd == "doctor":
