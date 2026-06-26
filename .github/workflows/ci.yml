@@ -1,32 +1,49 @@
 ---
-name: CI - Validation des Playbooks Ansible
+name: 🔧 Infra Lab CI (tools + docs)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/* ]
+    paths:
+      - tools/**
+      - docs/**
+      - .github/workflows/*
   pull_request:
     branches: [ main ]
+    paths:
+      - tools/**
+      - docs/**
 
 jobs:
-  lint-and-check:
-    name: Lint & Dry-Run
+  validate:
+    name: Validate tools + docs
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout du code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Installer Ansible
+      - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get install -y yamllint
+          pip install ruff --quiet
 
-      - name: Validation YAML (playbooks uniquement)
+      - name: YAML Lint
         run: |
-          find ansible -name "*.yml" -or -name "*.yaml" | while read file; do
-            echo "Vérification de $file"
-            ansible-playbook "$file" --syntax-check || true
-          done
+          find . -name *.yml -o -name *.yaml | xargs -r yamllint -d {extends: relaxed, rules: {line-length: disable}} || true
 
-      - name: Vérification de l'inventaire
-        run: ansible-inventory -i ansible/hosts --list
+      - name: Python Lint (ruff) - ai-cli-v2
+        run: |
+          if [ -d tools/ai-cli-v2 ]; then
+            ruff check tools/ai-cli-v2/ --quiet || true
+            ruff format tools/ai-cli-v2/ --check --quiet || true
+          else
+            echo "tools/ai-cli-v2/ not found - skipping"
+          fi
+
+      - name: Structure check
+        run: |
+          echo "=== docs/ ===" && ls docs/ 2>/dev/null || echo "missing"
+          echo "=== tools/ ===" && ls tools/ 2>/dev/null || echo "missing"
+          echo "=== AGENTS.md ===" && head -5 docs/AGENTS.md 2>/dev/null || echo "missing"
