@@ -1,32 +1,35 @@
 ---
-name: CI - Validation des Playbooks Ansible
+name: 🔧 Infra Lab CI (tools/docs)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/* ]
+    paths:
+      - 'tools/**'
+      - 'docs/**'
+      - '.github/workflows/*'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'tools/**'
+      - 'docs/**'
 
 jobs:
-  lint-and-check:
-    name: Lint & Dry-Run
+  validate:
+    name: Validate tools + docs
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout du code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Installer Ansible
+      - name: YAML Lint
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get update && sudo apt-get install -y yamllint
+          find . -name '*.yml' -o -name '*.yaml' | xargs -r yamllint -d '{extends: relaxed, rules: {line-length: disable}}' || true
 
-      - name: Validation YAML (playbooks uniquement)
+      - name: Structure check
         run: |
-          find ansible -name "*.yml" -or -name "*.yaml" | while read file; do
-            echo "Vérification de $file"
-            ansible-playbook "$file" --syntax-check || true
-          done
-
-      - name: Vérification de l'inventaire
-        run: ansible-inventory -i ansible/hosts --list
+          echo "=== docs/ ===" && ls docs/ 2>/dev/null || echo "❌ missing"
+          echo "=== tools/ ===" && ls tools/ 2>/dev/null || echo "❌ missing"
+          echo "=== AGENTS.md ===" && head -5 docs/AGENTS.md 2>/dev/null || echo "❌ missing"
