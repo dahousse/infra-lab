@@ -1,42 +1,50 @@
-"""Ollama LLM engine — appelle le vrai model."""
+"""Ollama engine — calls the Ollama API"""
 
+import json
 from core.client import OllamaClient
 from core.config import load_config
 
 
-def ask(prompt: str) -> dict:
-    """Envoie le prompt à Ollama et retourne la réponse."""
-    cfg = load_config()
-    endpoint = cfg.get("endpoint", "http://192.168.1.10:11434")
-    model = cfg.get("default_model", "phi3:mini")
-    timeout = cfg.get("timeout", 60)
+_config_cache = None
 
-    client = OllamaClient(endpoint)
+
+def _get_client():
+    global _config_cache
+    if _config_cache is None:
+        _config_cache = load_config()
+    return OllamaClient(_config_cache["endpoint"]), _config_cache
+
+
+def ask(prompt: str) -> dict:
+    """Ask Ollama a question"""
+    client, cfg = _get_client()
+    model = cfg.get("default_model", "qwen2.5-coder:7b")
+
+    if not isinstance(prompt, str):
+        prompt = str(prompt)
 
     try:
-        response = client.generate(model, prompt, timeout)
+        response = client.generate(model, prompt)
         return {
             "response": response,
-            "model": model,
+            "model": model
         }
     except Exception as e:
         return {
-            "response": f"[Ollama error] {e}",
-            "model": model,
             "error": str(e),
+            "model": model
         }
 
 
 def list_models() -> dict:
-    """Liste les modèles disponibles sur Ollama."""
-    cfg = load_config()
-    endpoint = cfg.get("endpoint", "http://192.168.1.10:11434")
-
-    client = OllamaClient(endpoint)
-
+    """List available Ollama models"""
+    client, _ = _get_client()
     try:
         data = client.models()
-        models = [m["name"] for m in data.get("models", [])]
-        return {"models": models, "count": len(models)}
+        return {
+            "models": [m["name"] for m in data.get("models", [])]
+        }
     except Exception as e:
-        return {"error": str(e), "models": []}
+        return {
+            "error": str(e)
+        }

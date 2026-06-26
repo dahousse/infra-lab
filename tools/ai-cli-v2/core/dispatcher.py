@@ -1,49 +1,44 @@
-"""Dispatcher — aiguille le plan vers le bon engine."""
+"""Dispatcher — routes plan to the right engine"""
 
-from engines.vm import create_vm
-from engines.ollama import ask, list_models
+from engines.vm import create_vm, list_vm
+from engines.ollama import ask
 from utils_ai.output_layer import wrap
 
 
-def dispatch(plan: dict, prompt: str = ""):
-    """Route le plan vers l'engine approprié.
-
-    Args:
-        plan: Dictionnaire contenant engine, action, params.
-        prompt: Le prompt original de l'utilisateur (passé aux engines LLM).
-    """
+def dispatch(plan: dict):
     engine = plan.get("engine", "ollama")
-    action = plan.get("action", "")
+    action = plan.get("action", "chat")
+    params = plan.get("params", {})
+    raw_prompt = plan.get("raw_prompt", "")
 
-    # --- Ollama : liste des modèles ---
-    if engine == "ollama" and action == "list_models":
-        try:
-            result = list_models()
-            return wrap("ollama", result)
-        except Exception as e:
-            return wrap("ollama", error=str(e))
-
-    # --- VM / Terraform ---
     if engine == "vm":
-        result = create_vm(plan, prompt)
+        if action == "create_vm":
+            result = create_vm(plan)
+        elif action == "list_vm":
+            result = list_vm(plan)
+        elif action == "delete_vm":
+            from engines.proxmox import stop_vm, delete_vm
+            vm_id = params.get("vm_id")
+            try:
+                if vm_id:
+                    stop_vm(vm_id)
+                    delete_vm(vm_id)
+                    result = {"status": "ok", "message": f"VM {vm_id} supprimee"}
+                else:
+                    result = {"status": "error", "error": "vm_id requis"}
+            except Exception as e:
+                result = {"status": "error", "error": str(e)}
+        else:
+            result = create_vm(plan)
         return wrap("vm", result)
 
-    # --- Docker ---
     if engine == "docker":
         return wrap("docker", {"message": "not implemented yet"})
 
-    # --- Proxmox ---
-    if engine == "proxmox":
-        from engines.proxmox import handle
-        try:
-            result = handle(plan, prompt)
-            return wrap("proxmox", result)
-        except Exception as e:
-            return wrap("proxmox", error=str(e))
-
-    # --- Fallback : parler à Ollama ---
+    # Fallback: Ollama chat (use raw_prompt if available)
     try:
-        result = ask(prompt)
+        chat_prompt = raw_prompt if raw_prompt else str(plan)
+        result = ask(chat_prompt)
         return wrap("ollama", result)
     except Exception as e:
         return wrap("ollama", error=str(e))

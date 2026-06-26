@@ -3,7 +3,7 @@ import yaml
 from core.errors import ConfigError
 
 DEFAULT_PATHS = [
-    Path("./tools/ai-cli-v2/config/config.yaml"),
+    Path("./config/config.yaml"),
     Path.home() / ".config/ai-cli/config.yaml",
     Path("/etc/ai-cli/config.yaml"),
 ]
