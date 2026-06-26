@@ -114,3 +114,20 @@ Engines : ✅ VM, ✅ Ollama, ✅ Proxmox, ✅ Terraform
 - Ollama v0.30.10, modèle par défaut qwen2.5-coder:7b
 - OS cible : Debian 13
 - Traefik v3.x, AdGuard latest
+
+## Versionning
+
+Tous les repos tagués à la même version à la fin de chaque Goal.
+
+| Version | Goal | Date |
+|:---|---:|:---|
+| v0.4.0 | I1 — Cycle TF→Ansible→Traefik | 2026-06-26 |
+| v0.3.0 | E2 — Prometheus/Grafana | 2026-06-25 |
+| v0.2.0 | E3 — CI/CD | 2026-06-25 |
+
+```bash
+# Exemple de tag multi-repo
+for repo in infra-lab infra-lab-tf ansible-infra-lab2; do
+  cd ~/$repo && git tag -a v0.4.0 -m "I1: cycle" && git push origin v0.4.0
+done
+```
