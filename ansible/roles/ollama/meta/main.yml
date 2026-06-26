@@ -1,7 +1,0 @@
-galaxy_info:
-  role_name: ollama
-  author: hasmi
-  description: Deploy Ollama AI node
-  license: MIT
-
-dependencies: []

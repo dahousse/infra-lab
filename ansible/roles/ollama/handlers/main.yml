@@ -1,5 +1,0 @@
----
-- name: restart ollama
-  systemd:
-    name: ollama
-    state: restarted
