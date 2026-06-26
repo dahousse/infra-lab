@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban — Infra Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1419;color:#e1e8ed;padding:24px;min-height:100vh}
+h1{font-size:1.8rem;margin-bottom:8px;color:#fff;display:flex;align-items:center;gap:10px}
+h1 small{font-size:.85rem;color:#6b7280;font-weight:400}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.counter{background:#1a2332;border-radius:12px;padding:8px 18px;font-size:.9rem;display:flex;gap:18px}
+.counter span strong{color:#fff}.counter .done{color:#22c55e}.counter .urgent{color:#ef4444}.counter .important{color:#f59e0b}.counter .evo{color:#3b82f6}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.board{grid-template-columns:1fr}}
+.column{background:#1a2332;border-radius:14px;padding:16px;min-height:200px}
+.column h2{font-size:1.1rem;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid;display:flex;justify-content:space-between;align-items:center}
+.column h2 .count{font-size:.8rem;background:#2a3a52;padding:2px 10px;border-radius:20px}
+.col-urgent h2{border-color:#ef4444}.col-important h2{border-color:#f59e0b}.col-evolution h2{border-color:#3b82f6}.col-done h2{border-color:#22c55e}
+.card{background:#0f1929;border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:3px solid;cursor:default}
+.card:last-child{margin-bottom:0}.card h3{font-size:.95rem;margin-bottom:4px;color:#fff}
+.card p{font-size:.8rem;color:#9ca3af;line-height:1.4;margin-bottom:6px}
+.card .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.card .tag{font-size:.7rem;padding:2px 8px;border-radius:20px;background:#2a3a52;color:#d1d5db}
+.tag-fixed{background:#065f46 !important;color:#6ee7b7 !important}
+.tag-done{background:#1e3a5f !important;color:#93c5fd !important}
+.card.card-done{opacity:.6;border-left-color:#22c55e}.card.card-done h3{color:#6b7280}
+.card.card-urgent{border-left-color:#ef4444}.card.card-important{border-left-color:#f59e0b}.card.card-evolution{border-left-color:#3b82f6}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📋 Infra Lab <small>Proxmox · Terraform · Ansible · Traefik</small></h1>
+<div class="counter">
+<span class="done"><strong>4</strong> ✅ faits</span>
+<span class="urgent"><strong>1</strong> 🔴 urgent</span>
+<span class="important"><strong>5</strong> 🟡 important</span>
+<span class="evo"><strong>4</strong> 🔵 évolution</span>
+</div>
+</div>
+
+<div class="board">
+
+<!-- URGENT -->
+<div class="column col-urgent">
+<h2>🔴 Urgent <span class="count">1</span></h2>
+
+<div class="card card-urgent">
+<h3>U2 — Fix dotfiles role</h3>
+<p>Remplacer <code>&lt;ton-user&gt;</code> → <code>dahousse</code> dans dotfiles/tasks/main.yml</p>
+<div class="tags"><span class="tag">dotfiles</span><span class="tag tag-fixed">✅ FIXED</span></div>
+</div>
+</div>
+
+<!-- IMPORTANT -->
+<div class="column col-important">
+<h2>🟡 Important <span class="count">5</span></h2>
+
+<div class="card card-important">
+<h3>I1 — Cycle auto TF → Ansible → Traefik</h3>
+<p>Après <code>terraform apply</code> : inventaire propre + Ansible first_install + traefik_config</p>
+<div class="tags"><span class="tag tag-done">🔧 EN COURS</span><span class="tag">deploy-vm.tf</span><span class="tag">local-exec</span></div>
+</div>
+
+<div class="card card-important">
+<h3>I2 — Engine Terraform pour OS Prompt</h3>
+<p>Remplacer le stub de l'engine TF dans tools/ai-cli-v2/</p>
+<div class="tags"><span class="tag">ai-cli</span><span class="tag">engine</span></div>
+</div>
+
+<div class="card card-important">
+<h3>I3 — Engine Proxmox pour OS Prompt</h3>
+<p>Remplacer le stub de l'engine Proxmox → interactions VM via CLI</p>
+<div class="tags"><span class="tag">ai-cli</span><span class="tag">engine</span></div>
+</div>
+
+<div class="card card-important">
+<h3>I4 — Ansible sur les hosts EXISTANTS</h3>
+<p>Tester Ansible sur tous les hosts réels (traefik, cockpit, portainer...)</p>
+<div class="tags"><span class="tag">site.yml</span><span class="tag">test</span></div>
+</div>
+
+<div class="card card-important">
+<h3>I6 — Nettoyer la structure roles/</h3>
+<p>Rôles mal placés (roles/tasks/main.yml = ollama, roles/defaults/, handlers/, meta/)</p>
+<div class="tags"><span class="tag">refactor</span></div>
+</div>
+</div>
+
+<!-- ÉVOLUTION -->
+<div class="column col-evolution">
+<h2>🔵 Évolution <span class="count">4</span></h2>
+
+<div class="card card-evolution">
+<h3>E1 — Vault Ansible + TF</h3>
+<p>Chiffrer les secrets (proxmox_password, clés SSH) avec ansible-vault</p>
+<div class="tags"><span class="tag">securité</span></div>
+</div>
+
+<div class="card card-evolution">
+<h3>E2 — Intégration supervision Prometheus</h3>
+<p>Alertmanager, règles d'alertes, dashboards Grafana standards</p>
+<div class="tags"><span class="tag">monitoring</span></div>
+</div>
+
+<div class="card card-evolution">
+<h3>E3 — CI/CD GitHub Actions</h3>
+<p>Terraform plan en PR, Ansible dry-run, lint automatique</p>
+<div class="tags"><span class="tag">automation</span></div>
+</div>
+
+<div class="card card-evolution">
+<h3>E4 — Vaultwarden/Bitwarden self-hosted</h3>
+<p>Gestionnaire de mots de passe maison sur le homelab</p>
+<div class="tags"><span class="tag">security</span></div>
+</div>
+</div>
+
+<!-- TERMINÉ -->
+<div class="column col-done">
+<h2>✅ Terminé <span class="count">4</span></h2>
+
+<div class="card card-done">
+<h3>U3 — Fix TF naming + inventory propre</h3>
+<p>Nom incrémental <code>clone_prefix</code>+<code>clone_vm_id</code>, sed au lieu de >>, destroy provisioner, vars Traefik optionnelles. Testé : VM 905 créée ✅</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">deploy-vm.tf</span></div>
+</div>
+
+<div class="card card-done">
+<h3>I7 — Fix roles/base (dnf → apt)</h3>
+<p>base/tasks/main.yml : <code>dnf</code> → <code>apt</code> + logrotate (Debian compatible ✅)</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">base role</span></div>
+</div>
+
+<div class="card card-done">
+<h3>U2 — Fix dotfiles role</h3>
+<p>Remplacé <code>&lt;ton-user&gt;</code> → <code>dahousse</code> dans dotfiles/tasks/main.yml ✅</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">dotfiles</span></div>
+</div>
+
+<div class="card card-done">
+<h3>U1 — Nettoyer l'inventory</h3>
+<p>Doublons test-clone virés, [test-clean] unique, inventory cohérent ✅</p>
+<div class="tags"><span class="tag tag-fixed">✅ DONE</span><span class="tag">inventory</span></div>
+</div>
+
+</div>
+<!-- fin board -->
+</body>
+</html>
