@@ -42,17 +42,54 @@ Internet → Traefik (.200:443) → services (.1, .3, .5, .6, .13, .148, .202…
 
 ## Conventions de déploiement
 
-### Cycle TF → Ansible → Traefik
+### Cycle TF → Ansible → Traefik (I1)
+
 ```
+# Déploiement complet d'une VM
+cd ~/infra-lab-tf
+terraform apply \
+  -var="clone_prefix=test" \
+  -var="clone_vm_id=906" \
+  -var="template_vm_id=102" \
+  -var="vm_cpus=2" \
+  -var="vm_memory=2048" \
+  -var="traefik_domain=test-906.mysmihome.duckdns.org" \
+  -var="traefik_port=80"
+
 terraform apply
-  ├─ Crée VM clone (bpg/proxmox)
-  ├─ local-exec: nettoie + ajoute dans inventory
-  └─ local-exec: ansible-playbook site.yml
-       ├─ Play 1: Wait SSH + Python
-       ├─ Play 2: first_install (apt, paquets)
-       ├─ Play 3: Dotfiles + Zsh
-       └─ Play 4: Traefik config (intelligent)
+  ├─ 1. Crée VM clone (bpg/proxmox, template 102)
+  ├─ 2. local-exec: nettoie + ajoute dans l'inventory Ansible
+  │     └─ Ligne: test-906 ansible_host=<IP> traefik_domain=... traefik_port=...
+  ├─ 3. local-exec: Attend SSH (60s timeout, 30 tentatives)
+  ├─ 4. local-exec: playbook_first_install.yml -l test-906
+  │     └─ Crée user infra + sudo, SSH keys, Zsh + Oh My Zsh, paquets
+  └─ 5. local-exec: playbook_traefik_config.yml (si domain+port fournis)
+        └─ Connecte → traefik (192.168.1.200)
+        └─ grep des domaines existants dans conf.d/
+        └─ Template J2 → nouveau fichier conf.d/test-906.yml
+        └─ Reload Traefik (systemctl kill -s USR1 traefik)
+
+# Destruction propre
+terraform destroy
+  └─ provisioner destroy:
+       ├─ Retire test-906 de l'inventory Ansible
+       ├─ rm -f /etc/traefik/conf.d/test-906.yml
+       └─ Reload Traefik
 ```
+
+### Variables Terraform (infra-lab-tf/variables.tf)
+
+| Variable | Default | Description |
+|:---|---:|:---|
+| `clone_prefix` | `"vm"` | Préfixe du nom (ex: test, app) |
+| `clone_vm_id` | — | ID de la VM + nom complet `${prefix}-${id}` |
+| `template_vm_id` | — | Template Proxmox à cloner (102 = Debian 13) |
+| `vm_cpus` | `1` | CPU cores |
+| `vm_memory` | `512` | RAM en MB |
+| `traefik_domain` | `""` | Domaine complet (optionnel) |
+| `traefik_port` | `""` | Port du service (optionnel) |
+| `proxmox_password` | (sensitive) | Mot de passe API Proxmox |
+| `lxc_root_password` | (sensitive) | Password root de la VM clonée |
 
 ### Règles
 - **Inventory unique** : plus de fichier `hosts`, seulement `inventory`
